@@ -1,0 +1,12 @@
+/* style.css */
+
+/* エラーセルの背景色 */
+.error {
+    background-color: #ffcccc !important;
+  }
+  
+  /* 編集可能なセルの背景色（必要に応じて調整） */
+  td[contenteditable="true"] {
+    background-color: #ffffff;
+  }
+  
