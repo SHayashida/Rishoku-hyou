@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <title>離職証明書 日数計算アプリ</title>
   <!-- Bootstrap 5 のCDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
   <!-- カスタムスタイル -->
   <link rel="stylesheet" href="style.css">
 </head>
@@ -13,7 +16,8 @@
     <h1 class="mb-4">離職証明書 日数計算アプリ</h1>
     <p>
       以下の表の <strong>A列, B列, D列, E列</strong> に日付（例: 2025-03-01）を入力してください。<br>
-      ※各行ごとに「開始日」と「終了日」を入力すると、C列とF列に「日数」（終了日―開始日＋1）が計算されます。
+      ※各行ごとに「開始日」と「終了日」を入力すると、C列とF列に「日数」（終了日―開始日＋1）が計算されます。<br>
+      <strong>スプレッドシートで複数セルをコピー</strong> → <strong>本アプリのセルにペースト</strong> すると、行・列が自動で分割されます。
     </p>
     <div class="mb-3">
       <button id="addRowsBtn" class="btn btn-primary me-2">12行追加</button>
@@ -31,7 +35,7 @@
         </tr>
       </thead>
       <tbody id="table-body">
-        <!-- 初期表示は JavaScript にて12行生成 -->
+        <!-- 初期行は script.js 側で12行生成します -->
       </tbody>
     </table>
   </div>
@@ -39,6 +43,8 @@
   <!-- カスタムスクリプト -->
   <script src="script.js"></script>
   <!-- Bootstrap 5 のJS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
 </body>
 </html>
