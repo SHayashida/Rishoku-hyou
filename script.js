@@ -204,11 +204,31 @@ function toggleCellSelection(e) {
 function copySelectedCells() {
   const tbody = document.getElementById('table-body');
   const lines = [];
+
+  // すべての行のデータを収集
   for (let row of tbody.rows) {
-    const texts = [...row.cells].filter(c => selectedCells.has(c)).map(c => c.innerText);
-    if (texts.length) lines.push(texts.join('\t'));
+    const rowData = [];
+    for (let cell of row.cells) {
+      rowData.push(cell.innerText);
+    }
+    lines.push(rowData.join('\t'));
   }
-  navigator.clipboard.writeText(lines.join('\n')).then(() => alert('コピーしました'));
+
+  // テキストエリアを作成してコピー
+  const textArea = document.createElement('textarea');
+  textArea.value = lines.join('\n');
+  document.body.appendChild(textArea);
+  textArea.select();
+  
+  try {
+    document.execCommand('copy');
+    alert('表全体をコピーしました。');
+  } catch (err) {
+    console.error('クリップボードへのコピーに失敗しました:', err);
+    alert('クリップボードへのコピーに失敗しました。');
+  } finally {
+    document.body.removeChild(textArea);
+  }
 }
 
 function handlePaste(e) {
