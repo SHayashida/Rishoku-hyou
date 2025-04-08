@@ -210,19 +210,40 @@ function copySelectedCells() {
   const tbody = document.getElementById('table-body');
   const lines = [];
 
-  // すべての行のデータを収集
-  for (let row of tbody.rows) {
-    const rowData = [];
-    for (let cell of row.cells) {
-      rowData.push(cell.innerText);
+  if (selectedCells.size > 0) {
+    // 選択されたセルがある場合は、選択されたセルのみをコピー
+    const selectedRows = new Set();
+    selectedCells.forEach(cell => {
+      selectedRows.add(cell.parentNode);
+    });
+
+    selectedRows.forEach(row => {
+      const rowData = [];
+      for (let i = 0; i < row.cells.length; i++) {
+        const cell = row.cells[i];
+        if (selectedCells.has(cell)) {
+          rowData.push(cell.innerText);
+        } else {
+          rowData.push(''); // 選択されていないセルは空文字を追加
+        }
+      }
+      lines.push(rowData.join('\t'));
+    });
+  } else {
+    // 選択されたセルがない場合は、表全体をコピー
+    for (let row of tbody.rows) {
+      const rowData = [];
+      for (let cell of row.cells) {
+        rowData.push(cell.innerText);
+      }
+      lines.push(rowData.join('\t'));
     }
-    lines.push(rowData.join('\t'));
   }
 
   // クリップボードにコピー
   navigator.clipboard.writeText(lines.join('\n'))
     .then(() => {
-      alert('表全体をコピーしました。');
+      alert(selectedCells.size > 0 ? '選択したセルをコピーしました。' : '表全体をコピーしました。');
     })
     .catch(err => {
       console.error('クリップボードへのコピーに失敗しました:', err);
@@ -234,7 +255,7 @@ function copySelectedCells() {
       
       try {
         document.execCommand('copy');
-        alert('表全体をコピーしました。');
+        alert(selectedCells.size > 0 ? '選択したセルをコピーしました。' : '表全体をコピーしました。');
       } catch (err) {
         console.error('フォールバックコピーも失敗しました:', err);
         alert('クリップボードへのコピーに失敗しました。');
