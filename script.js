@@ -1,4 +1,6 @@
 let selectedCells = new Set();
+let isDragging = false;
+let dragStartCell = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeTable(12);
@@ -36,6 +38,11 @@ function createRow() {
     if ([0,1,3,4].includes(i)) {
       cell.contentEditable = 'true';
       cell.addEventListener('paste', handlePaste);
+      
+      // Add drag and drop event listeners
+      cell.addEventListener('mousedown', handleDragStart);
+      cell.addEventListener('mouseover', handleDragOver);
+      cell.addEventListener('mouseup', handleDragEnd);
     }
     cell.addEventListener('click', toggleCellSelection);
     row.appendChild(cell);
@@ -286,4 +293,41 @@ function clearAll() {
   
   // Clear error classes
   document.querySelectorAll('.error').forEach(cell => cell.classList.remove('error'));
+}
+
+function handleDragStart(e) {
+  if (!e.currentTarget.contentEditable) return;
+  
+  isDragging = true;
+  dragStartCell = e.currentTarget;
+  e.currentTarget.classList.add('dragging');
+  
+  // Prevent text selection while dragging
+  e.preventDefault();
+}
+
+function handleDragOver(e) {
+  if (!isDragging || !e.currentTarget.contentEditable) return;
+  
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+
+function handleDragEnd(e) {
+  if (!isDragging) return;
+  
+  isDragging = false;
+  dragStartCell.classList.remove('dragging');
+  
+  if (e.currentTarget !== dragStartCell && e.currentTarget.contentEditable) {
+    // Copy the content
+    e.currentTarget.innerText = dragStartCell.innerText;
+  }
+  
+  // Remove drag-over class from all cells
+  document.querySelectorAll('.drag-over').forEach(cell => {
+    cell.classList.remove('drag-over');
+  });
+  
+  dragStartCell = null;
 }

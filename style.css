@@ -191,4 +191,14 @@ td[contenteditable="true"]:focus {
     box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
   }
 }
+
+td.dragging {
+  background-color: #e3f2fd;
+  border: 2px dashed #2196f3;
+}
+
+td.drag-over {
+  background-color: #bbdefb;
+  border: 2px dashed #1976d2;
+}
   
