@@ -214,21 +214,29 @@ function copySelectedCells() {
     lines.push(rowData.join('\t'));
   }
 
-  // テキストエリアを作成してコピー
-  const textArea = document.createElement('textarea');
-  textArea.value = lines.join('\n');
-  document.body.appendChild(textArea);
-  textArea.select();
-  
-  try {
-    document.execCommand('copy');
-    alert('表全体をコピーしました。');
-  } catch (err) {
-    console.error('クリップボードへのコピーに失敗しました:', err);
-    alert('クリップボードへのコピーに失敗しました。');
-  } finally {
-    document.body.removeChild(textArea);
-  }
+  // クリップボードにコピー
+  navigator.clipboard.writeText(lines.join('\n'))
+    .then(() => {
+      alert('表全体をコピーしました。');
+    })
+    .catch(err => {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+      // フォールバック: テキストエリアを使用した方法
+      const textArea = document.createElement('textarea');
+      textArea.value = lines.join('\n');
+      document.body.appendChild(textArea);
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        alert('表全体をコピーしました。');
+      } catch (err) {
+        console.error('フォールバックコピーも失敗しました:', err);
+        alert('クリップボードへのコピーに失敗しました。');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    });
 }
 
 function handlePaste(e) {
