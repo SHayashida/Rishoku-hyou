@@ -108,29 +108,37 @@ h1 {
 }
 
 .table td {
-  padding: 1rem;
-  vertical-align: middle;
-  border-color: #e0e0e0;
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  min-width: 120px;
+  position: relative;
+  user-select: none;
 }
 
 td[contenteditable="true"] {
-  background-color: #ffffff;
-  min-width: 120px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 0.5rem;
-  transition: all 0.2s ease;
+  background-color: #f8f9fa;
 }
 
 td[contenteditable="true"]:focus {
-  border-color: #3f51b5;
-  box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.1);
-  outline: none;
+  outline: 2px solid #007bff;
+  background-color: #fff;
 }
 
 .selected {
-  background-color: #e8eaf6 !important;
-  border-color: #3f51b5 !important;
+  background-color: #e3f2fd !important;
+  outline: 2px solid #2196f3;
+}
+
+td.selected::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(33, 150, 243, 0.1);
+  pointer-events: none;
 }
 
 .error {
@@ -190,15 +198,5 @@ td[contenteditable="true"]:focus {
   100% {
     box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
   }
-}
-
-td.dragging {
-  background-color: #e3f2fd;
-  border: 2px dashed #2196f3;
-}
-
-td.drag-over {
-  background-color: #bbdefb;
-  border: 2px dashed #1976d2;
 }
   

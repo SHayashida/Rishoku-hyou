@@ -1,6 +1,6 @@
 let selectedCells = new Set();
 let isDragging = false;
-let dragStartCell = null;
+let startCell = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeTable(12);
@@ -38,13 +38,11 @@ function createRow() {
     if ([0,1,3,4].includes(i)) {
       cell.contentEditable = 'true';
       cell.addEventListener('paste', handlePaste);
-      
-      // Add drag and drop event listeners
-      cell.addEventListener('mousedown', handleDragStart);
-      cell.addEventListener('mouseover', handleDragOver);
-      cell.addEventListener('mouseup', handleDragEnd);
     }
-    cell.addEventListener('click', toggleCellSelection);
+    cell.addEventListener('mousedown', startDragging);
+    cell.addEventListener('mouseover', drag);
+    cell.addEventListener('mouseup', stopDragging);
+    cell.addEventListener('contextmenu', handleContextMenu);
     row.appendChild(cell);
   }
   return row;
@@ -295,39 +293,56 @@ function clearAll() {
   document.querySelectorAll('.error').forEach(cell => cell.classList.remove('error'));
 }
 
-function handleDragStart(e) {
-  if (!e.currentTarget.contentEditable) return;
-  
+function startDragging(e) {
   isDragging = true;
-  dragStartCell = e.currentTarget;
-  e.currentTarget.classList.add('dragging');
-  
-  // Prevent text selection while dragging
-  e.preventDefault();
+  startCell = e.currentTarget;
+  selectedCells.clear();
+  document.querySelectorAll('.selected').forEach(cell => cell.classList.remove('selected'));
+  toggleCellSelection(e);
 }
 
-function handleDragOver(e) {
-  if (!isDragging || !e.currentTarget.contentEditable) return;
-  
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-}
-
-function handleDragEnd(e) {
+function drag(e) {
   if (!isDragging) return;
   
-  isDragging = false;
-  dragStartCell.classList.remove('dragging');
+  const currentCell = e.currentTarget;
+  if (!startCell || !currentCell) return;
+
+  const startRow = startCell.parentNode;
+  const currentRow = currentCell.parentNode;
+  const tbody = document.getElementById('table-body');
   
-  if (e.currentTarget !== dragStartCell && e.currentTarget.contentEditable) {
-    // Copy the content
-    e.currentTarget.innerText = dragStartCell.innerText;
+  const startRowIndex = Array.from(tbody.rows).indexOf(startRow);
+  const currentRowIndex = Array.from(tbody.rows).indexOf(currentRow);
+  const startColIndex = Array.from(startRow.cells).indexOf(startCell);
+  const currentColIndex = Array.from(currentRow.cells).indexOf(currentCell);
+
+  const minRow = Math.min(startRowIndex, currentRowIndex);
+  const maxRow = Math.max(startRowIndex, currentRowIndex);
+  const minCol = Math.min(startColIndex, currentColIndex);
+  const maxCol = Math.max(startColIndex, currentColIndex);
+
+  // Clear previous selection
+  document.querySelectorAll('.selected').forEach(cell => cell.classList.remove('selected'));
+  selectedCells.clear();
+
+  // Select cells in the range
+  for (let i = minRow; i <= maxRow; i++) {
+    for (let j = minCol; j <= maxCol; j++) {
+      const cell = tbody.rows[i].cells[j];
+      selectedCells.add(cell);
+      cell.classList.add('selected');
+    }
   }
-  
-  // Remove drag-over class from all cells
-  document.querySelectorAll('.drag-over').forEach(cell => {
-    cell.classList.remove('drag-over');
-  });
-  
-  dragStartCell = null;
+}
+
+function stopDragging() {
+  isDragging = false;
+  startCell = null;
+}
+
+function handleContextMenu(e) {
+  e.preventDefault();
+  if (selectedCells.size > 0) {
+    copySelectedCells();
+  }
 }
