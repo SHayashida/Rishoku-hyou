@@ -2,24 +2,29 @@ let selectedCells = new Set();
 let isDragging = false;
 let startCell = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  initializeTable(12);
-  document.getElementById('addRowsBtn').addEventListener('click', () => addRows(12));
-  document.getElementById('calcBtn').addEventListener('click', calculateDays);
-  document.getElementById('copyBtn').addEventListener('click', copySelectedCells);
-  document.getElementById('clearBtn').addEventListener('click', clearAll);
+// 初期化処理（DOMContentLoadedを使わずに実行）
+initializeTable(12);
 
-  // Add input event listeners to first row cells
-  const firstRow = document.getElementById('table-body').rows[0];
+const addRowsBtn = document.getElementById('addRowsBtn');
+const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
+const fillBtn = document.getElementById('fillSubsequentRowsBtn');
+
+addRowsBtn?.addEventListener('click', () => addRows(12));
+// document.getElementById('calcBtn')?.addEventListener('click', calculateDays); // ボタンが存在しないため無効化
+copyBtn?.addEventListener('click', copySelectedCells);
+clearBtn?.addEventListener('click', clearAll);
+
+const firstRow = document.getElementById('table-body').rows[0];
+if (firstRow) {
   for (let i = 0; i < 6; i++) {
-    if ([0,1,3,4].includes(i)) {
+    if ([0, 1, 3, 4].includes(i)) {
       firstRow.cells[i].addEventListener('input', () => {
-        // Enable the fillSubsequentRows button when first row is modified
-        document.getElementById('fillSubsequentRowsBtn').disabled = false;
+        fillBtn.disabled = false;
       });
     }
   }
-});
+}
 
 function initializeTable(count) {
   const tbody = document.getElementById('table-body');
@@ -35,7 +40,7 @@ function createRow() {
   const row = document.createElement('tr');
   for (let i = 0; i < 6; i++) {
     const cell = document.createElement('td');
-    if ([0,1,3,4].includes(i)) {
+    if ([0, 1, 3, 4].includes(i)) {
       cell.contentEditable = 'true';
       cell.addEventListener('paste', handlePaste);
     }
@@ -71,7 +76,6 @@ function calculateDays() {
       cVal = calcDays(a, b, payType);
     }
     if (isValidDate(d) && isValidDate(e)) {
-      // ⑪の計算は常に終了日から開始日を引いて1を加える
       const diffDays = Math.floor((new Date(e) - new Date(d)) / 86400000) + 1;
       fVal = diffDays;
     }
@@ -84,32 +88,23 @@ function calculateDays() {
     if (cVal === 'エラー' || fVal === 'エラー') errorRows.push(i + 1);
   }
 
-  if (errorRows.length) {
-    alert(`エラー行: ${errorRows.join(', ')}`);
-  }
-  document.getElementById('copyBtn').disabled = errorRows.length > 0;
+  copyBtn.disabled = false; // 修正：常にコピーできるように変更
 }
 
 function calcDays(startStr, endStr, payType) {
   const s = new Date(startStr), e = new Date(endStr);
   if (e < s) return 'エラー';
-  
-  // 日付の差分を計算（終了日を含むため+1）
+
   const diffDays = Math.floor((e - s) / 86400000) + 1;
-  
-  // 賃金形態に応じて日数を計算
   if (payType === 'monthly') {
-    // 完全月給制の場合、その月の日数を返す
     return daysInMonth(s);
   } else if (payType === 'daily' || payType === 'hourly') {
-    // 日給月給制または時給制の場合、実際の日数を返す
     return diffDays;
   }
   return 'エラー';
 }
 
 function daysInMonth(date) {
-  // 指定された月の最終日を取得
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 }
 
@@ -124,16 +119,14 @@ function insertMonthDates() {
   const first = `${y}-${String(m).padStart(2, '0')}-01`;
   const last = `${y}-${String(m).padStart(2, '0')}-${new Date(y, m, 0).getDate()}`;
   const tbody = document.getElementById('table-body');
-  
-  // Set dates for the first row only
   const firstRow = tbody.rows[0];
+
   firstRow.cells[0].innerText = first;
   firstRow.cells[1].innerText = last;
   firstRow.cells[3].innerText = first;
   firstRow.cells[4].innerText = last;
 
-  // Enable the fillSubsequentRows button
-  document.getElementById('fillSubsequentRowsBtn').disabled = false;
+  fillBtn.disabled = false;
 }
 
 function fillSubsequentRows() {
@@ -143,56 +136,41 @@ function fillSubsequentRows() {
   const firstEndDate = firstRow.cells[1].innerText.trim();
   const firstStartDate10 = firstRow.cells[3].innerText.trim();
   const firstEndDate10 = firstRow.cells[4].innerText.trim();
-  
-  if (!isValidDate(firstDate) || !isValidDate(firstEndDate) || 
-      !isValidDate(firstStartDate10) || !isValidDate(firstEndDate10)) {
+
+  if (!isValidDate(firstDate) || !isValidDate(firstEndDate) || !isValidDate(firstStartDate10) || !isValidDate(firstEndDate10)) {
     alert('1行目に有効な日付が入力されていません。');
     return;
   }
 
   const firstDateObj = new Date(firstDate);
-  const firstEndDateObj = new Date(firstEndDate);
   const firstStartDate10Obj = new Date(firstStartDate10);
-  
-  // Get the day of the month from the first start date
   const startDay = firstDateObj.getDate();
   const startDay10 = firstStartDate10Obj.getDate();
-  
-  // Fill subsequent rows with previous months
+
   for (let i = 1; i < tbody.rows.length; i++) {
     const row = tbody.rows[i];
-    
-    // Calculate start date (same day of month as first row, but previous month)
     const startDate = new Date(firstDateObj.getFullYear(), firstDateObj.getMonth() - i, startDay);
-    const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
-    
-    // Calculate end date (day before the previous row's start date)
-    const prevStartDate = new Date(firstDateObj.getFullYear(), firstDateObj.getMonth() - (i-1), startDay);
+    const prevStartDate = new Date(firstDateObj.getFullYear(), firstDateObj.getMonth() - (i - 1), startDay);
     const endDate = new Date(prevStartDate);
     endDate.setDate(endDate.getDate() - 1);
-    const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
-    
-    // Set the dates for ⑧ column
-    row.cells[0].innerText = startDateStr;
-    row.cells[1].innerText = endDateStr;
-    
-    // Calculate dates for ⑩ column
+
+    row.cells[0].innerText = formatDate(startDate);
+    row.cells[1].innerText = formatDate(endDate);
+
     const startDate10 = new Date(firstStartDate10Obj.getFullYear(), firstStartDate10Obj.getMonth() - i, startDay10);
-    const startDate10Str = `${startDate10.getFullYear()}-${String(startDate10.getMonth() + 1).padStart(2, '0')}-${String(startDate10.getDate()).padStart(2, '0')}`;
-    
-    // Calculate end date for ⑩ (day before the previous row's start date)
-    const prevStartDate10 = new Date(firstStartDate10Obj.getFullYear(), firstStartDate10Obj.getMonth() - (i-1), startDay10);
+    const prevStartDate10 = new Date(firstStartDate10Obj.getFullYear(), firstStartDate10Obj.getMonth() - (i - 1), startDay10);
     const endDate10 = new Date(prevStartDate10);
     endDate10.setDate(endDate10.getDate() - 1);
-    const endDate10Str = `${endDate10.getFullYear()}-${String(endDate10.getMonth() + 1).padStart(2, '0')}-${String(endDate10.getDate()).padStart(2, '0')}`;
-    
-    // Set the dates for ⑩ column
-    row.cells[3].innerText = startDate10Str;
-    row.cells[4].innerText = endDate10Str;
+
+    row.cells[3].innerText = formatDate(startDate10);
+    row.cells[4].innerText = formatDate(endDate10);
   }
 
-  // Automatically calculate after filling the rows
   calculateDays();
+}
+
+function formatDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 function toggleCellSelection(e) {
@@ -210,8 +188,9 @@ function copySelectedCells() {
   const tbody = document.getElementById('table-body');
   const lines = [];
 
+  console.log('コピー開始: 選択セル数 =', selectedCells.size);
+
   if (selectedCells.size > 0) {
-    // 選択されたセルがある場合は、選択されたセルのみをコピー
     const selectedRows = new Set();
     selectedCells.forEach(cell => {
       selectedRows.add(cell.parentNode);
@@ -221,16 +200,11 @@ function copySelectedCells() {
       const rowData = [];
       for (let i = 0; i < row.cells.length; i++) {
         const cell = row.cells[i];
-        if (selectedCells.has(cell)) {
-          rowData.push(cell.innerText);
-        } else {
-          rowData.push(''); // 選択されていないセルは空文字を追加
-        }
+        rowData.push(selectedCells.has(cell) ? cell.innerText : '');
       }
       lines.push(rowData.join('\t'));
     });
   } else {
-    // 選択されたセルがない場合は、表全体をコピー
     for (let row of tbody.rows) {
       const rowData = [];
       for (let cell of row.cells) {
@@ -240,24 +214,21 @@ function copySelectedCells() {
     }
   }
 
-  // クリップボードにコピー
   navigator.clipboard.writeText(lines.join('\n'))
     .then(() => {
       alert(selectedCells.size > 0 ? '選択したセルをコピーしました。' : '表全体をコピーしました。');
     })
     .catch(err => {
-      console.error('クリップボードへのコピーに失敗しました:', err);
-      // フォールバック: テキストエリアを使用した方法
+      console.error('クリップボードコピー失敗:', err);
       const textArea = document.createElement('textarea');
       textArea.value = lines.join('\n');
       document.body.appendChild(textArea);
       textArea.select();
-      
       try {
         document.execCommand('copy');
         alert(selectedCells.size > 0 ? '選択したセルをコピーしました。' : '表全体をコピーしました。');
       } catch (err) {
-        console.error('フォールバックコピーも失敗しました:', err);
+        console.error('フォールバックコピー失敗:', err);
         alert('クリップボードへのコピーに失敗しました。');
       } finally {
         document.body.removeChild(textArea);
@@ -286,31 +257,18 @@ function handlePaste(e) {
 
 function clearAll() {
   const tbody = document.getElementById('table-body');
-  const rows = tbody.rows;
-  
-  // Clear all cells
-  for (let row of rows) {
+  for (let row of tbody.rows) {
     for (let cell of row.cells) {
-      if (cell.contentEditable === 'true') {
-        cell.innerText = '';
-      } else {
-        cell.innerText = '';
-      }
+      cell.innerText = '';
     }
   }
 
-  // Clear month picker
   document.getElementById('monthPicker').value = '';
-  
-  // Reset buttons
-  document.getElementById('fillSubsequentRowsBtn').disabled = true;
-  document.getElementById('copyBtn').disabled = true;
-  
-  // Clear selected cells
+  fillBtn.disabled = true;
+  copyBtn.disabled = false;
+
   selectedCells.clear();
   document.querySelectorAll('.selected').forEach(cell => cell.classList.remove('selected'));
-  
-  // Clear error classes
   document.querySelectorAll('.error').forEach(cell => cell.classList.remove('error'));
 }
 
@@ -324,14 +282,12 @@ function startDragging(e) {
 
 function drag(e) {
   if (!isDragging) return;
-  
-  const currentCell = e.currentTarget;
-  if (!startCell || !currentCell) return;
 
+  const currentCell = e.currentTarget;
   const startRow = startCell.parentNode;
   const currentRow = currentCell.parentNode;
   const tbody = document.getElementById('table-body');
-  
+
   const startRowIndex = Array.from(tbody.rows).indexOf(startRow);
   const currentRowIndex = Array.from(tbody.rows).indexOf(currentRow);
   const startColIndex = Array.from(startRow.cells).indexOf(startCell);
@@ -342,11 +298,9 @@ function drag(e) {
   const minCol = Math.min(startColIndex, currentColIndex);
   const maxCol = Math.max(startColIndex, currentColIndex);
 
-  // Clear previous selection
   document.querySelectorAll('.selected').forEach(cell => cell.classList.remove('selected'));
   selectedCells.clear();
 
-  // Select cells in the range
   for (let i = minRow; i <= maxRow; i++) {
     for (let j = minCol; j <= maxCol; j++) {
       const cell = tbody.rows[i].cells[j];
